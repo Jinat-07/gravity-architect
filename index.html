@@ -9,15 +9,25 @@
 <body>
     <!-- Game UI Overlay -->
     <div id="ui-container">
-        <button id="btn-drop">Drop Ball</button>
-        <button id="btn-reset">Reset Level</button>
+        <select id="level-select">
+            <option value="0">Level 1</option>
+            <option value="1">Level 2</option>
+            <option value="2">Level 3</option>
+            <option value="3">Level 4</option>
+            <option value="4">Level 5</option>
+        </select>
+        <button id="btn-drop">Drop</button>
+        <button id="btn-reset">Reset</button>
     </div>
 
-    <!-- Win / Loss Modal (Hidden by default) -->
+    <!-- Win / Loss Modal -->
     <div id="message-modal" class="hidden">
         <div class="modal-content">
             <h1 id="message-title">You Win!</h1>
-            <button id="btn-play-again">Play Again</button>
+            <div class="modal-buttons">
+                <button id="btn-play-again">Replay Level</button>
+                <button id="btn-next-level" class="hidden">Next Level</button>
+            </div>
         </div>
     </div>
 
