@@ -7,12 +7,17 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Import Three.js for 3D graphics -->
+    <!-- Game UI Overlay -->
+    <div id="ui-container">
+        <button id="btn-drop">Drop Ball</button>
+        <button id="btn-reset">Reset Level</button>
+    </div>
+
+    <!-- Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <!-- Import Cannon.js for Physics -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
     
-    <!-- Our Game Logic -->
+    <!-- Game Logic -->
     <script src="main.js"></script>
 </body>
 </html>
