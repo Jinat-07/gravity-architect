@@ -42,16 +42,18 @@ const dragPlane = new THREE.Mesh(invisiblePlaneGeo, invisiblePlaneMat);
 scene.add(dragPlane);
 
 // ==========================================
-// 3. CREATE GAME OBJECTS
+// 3. CREATE GAME OBJECTS & WIN DETECTION
 // ==========================================
 const objectsToUpdate = [];
+let gameOver = false;
 
 // --- THE BALL ---
 const ballRadius = 1;
 const startPosition = new CANNON.Vec3(-10, 15, 0);
 
 const ballBody = new CANNON.Body({
-    mass: 0, // Starts at 0 so it floats until 'Drop' is pressed
+    type: CANNON.Body.STATIC, // Explicitly start as static (frozen)
+    mass: 0, 
     shape: new CANNON.Sphere(ballRadius),
     position: startPosition.clone(), 
     material: defaultMaterial 
@@ -97,6 +99,17 @@ targetMesh.position.copy(targetBody.position);
 targetMesh.receiveShadow = true;
 scene.add(targetMesh);
 
+// --- WIN DETECTION ---
+// Listen for physics collisions on the ball
+ballBody.addEventListener("collide", function(e) {
+    if (gameOver) return;
+    // If the ball hits the target zone's body
+    if (e.body === targetBody) {
+        gameOver = true;
+        showModal("Level Passed! 🎯");
+    }
+});
+
 // ==========================================
 // 4. PLAYER INTERACTION & RAMPS
 // ==========================================
@@ -104,7 +117,7 @@ const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 let isDrawing = false;
 let startDrawPoint = new THREE.Vector3();
-const drawnRamps = []; // Array to store user-created ramps
+const drawnRamps = []; 
 
 function getMouse3DPosition(event) {
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -115,9 +128,7 @@ function getMouse3DPosition(event) {
 }
 
 window.addEventListener('mousedown', (event) => {
-    // Prevent drawing if clicking UI buttons
-    if(event.target.tagName === 'BUTTON') return; 
-
+    if(event.target.tagName === 'BUTTON' || gameOver) return; 
     const point = getMouse3DPosition(event);
     if (point) {
         isDrawing = true;
@@ -126,7 +137,7 @@ window.addEventListener('mousedown', (event) => {
 });
 
 window.addEventListener('mouseup', (event) => {
-    if (!isDrawing) return;
+    if (!isDrawing || gameOver) return;
     isDrawing = false;
     const endDrawPoint = getMouse3DPosition(event);
     if (endDrawPoint) createRamp(startDrawPoint, endDrawPoint);
@@ -138,13 +149,13 @@ function createRamp(startP, endP) {
 
     const midX = (startP.x + endP.x) / 2;
     const midY = (startP.y + endP.y) / 2;
-    const midZ = 0; 
+    
     const angle = Math.atan2(endP.y - startP.y, endP.x - startP.x);
 
     const rampBody = new CANNON.Body({
         mass: 0, 
         shape: new CANNON.Box(new CANNON.Vec3(distance / 2, 0.25, 2)),
-        position: new CANNON.Vec3(midX, midY, midZ),
+        position: new CANNON.Vec3(midX, midY, 0),
         material: rampMaterial
     });
     rampBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), angle);
@@ -159,22 +170,37 @@ function createRamp(startP, endP) {
     rampMesh.castShadow = true;
     scene.add(rampMesh);
 
-    // Save so we can delete them later
     drawnRamps.push({ body: rampBody, mesh: rampMesh });
 }
 
 // ==========================================
 // 5. UI CONTROLS & GAME STATE
 // ==========================================
-document.getElementById('btn-drop').addEventListener('click', () => {
-    // Turn on gravity for the ball
+const btnDrop = document.getElementById('btn-drop');
+const btnReset = document.getElementById('btn-reset');
+const modal = document.getElementById('message-modal');
+const modalTitle = document.getElementById('message-title');
+const btnPlayAgain = document.getElementById('btn-play-again');
+
+function showModal(message) {
+    modalTitle.innerText = message;
+    modal.classList.remove('hidden');
+}
+
+btnDrop.addEventListener('click', () => {
+    if (gameOver) return;
+    // FIX: Change type to DYNAMIC so gravity can take over
+    ballBody.type = CANNON.Body.DYNAMIC;
     ballBody.mass = 5;
     ballBody.updateMassProperties();
-    ballBody.wakeUp(); // Tell physics engine to start calculating it
+    ballBody.wakeUp();
 });
 
-document.getElementById('btn-reset').addEventListener('click', () => {
-    // 1. Reset the ball
+function resetLevel() {
+    gameOver = false;
+    
+    // FIX: Change type back to STATIC so it floats again
+    ballBody.type = CANNON.Body.STATIC;
     ballBody.mass = 0;
     ballBody.updateMassProperties();
     ballBody.velocity.set(0, 0, 0);
@@ -182,13 +208,17 @@ document.getElementById('btn-reset').addEventListener('click', () => {
     ballBody.position.copy(startPosition);
     ballBody.quaternion.set(0, 0, 0, 1);
 
-    // 2. Delete all drawn ramps
     drawnRamps.forEach(ramp => {
         world.removeBody(ramp.body);
         scene.remove(ramp.mesh);
     });
-    drawnRamps.length = 0; // Clear the array
-});
+    drawnRamps.length = 0; 
+    
+    modal.classList.add('hidden');
+}
+
+btnReset.addEventListener('click', resetLevel);
+btnPlayAgain.addEventListener('click', resetLevel);
 
 // ==========================================
 // 6. THE GAME LOOP
@@ -203,6 +233,12 @@ function animate() {
         obj.mesh.position.copy(obj.body.position);
         obj.mesh.quaternion.copy(obj.body.quaternion);
     });
+
+    // LOSS DETECTION: Check if ball fell off the screen
+    if (!gameOver && ballBody.position.y < -25) {
+        gameOver = true;
+        showModal("Fell into the abyss! 🌌");
+    }
 
     renderer.render(scene, camera);
 }
