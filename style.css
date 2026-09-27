@@ -1,11 +1,50 @@
 body, html {
     margin: 0;
     padding: 0;
-    overflow: hidden; /* Hides scrollbars */
-    background-color: #1a1a2e; /* Deep space blue background */
-    font-family: sans-serif;
+    overflow: hidden;
+    background-color: #1a1a2e; 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 canvas {
-    display: block; /* Removes weird spacing under the canvas */
+    display: block; 
+}
+
+/* UI Overlay Styling */
+#ui-container {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    display: flex;
+    gap: 15px;
+}
+
+button {
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+
+button:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 3px rgba(0,0,0,0.3);
+}
+
+#btn-drop {
+    background-color: #2ed573; /* Bright green */
+    color: white;
+}
+
+#btn-reset {
+    background-color: #ff4757; /* Bright red */
+    color: white;
 }
