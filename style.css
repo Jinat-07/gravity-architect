@@ -1,0 +1,11 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* Hides scrollbars */
+    background-color: #1a1a2e; /* Deep space blue background */
+    font-family: sans-serif;
+}
+
+canvas {
+    display: block; /* Removes weird spacing under the canvas */
+}
